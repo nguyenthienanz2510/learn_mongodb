@@ -1,48 +1,56 @@
-const path = require("path");
+const path = require('path');
 
-const express = require("express");
-const bodyParser = require("body-parser");
+const express = require('express');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 
-const errorController = require("./controllers/error");
-const mongoConnect = require("./util/database").mongoConnect;
-const User = require("./models/user");
+const errorController = require('./controllers/error');
+const User = require('./models/user');
 
 const app = express();
 
-app.set("view engine", "ejs");
-app.set("views", "views");
+app.set('view engine', 'ejs');
+app.set('views', 'views');
 
-const adminRoutes = require("./routes/admin");
-const shopRoutes = require("./routes/shop");
-const mongoose = require("mongoose");
+const adminRoutes = require('./routes/admin');
+const shopRoutes = require('./routes/shop');
 
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((req, res, next) => {
-  console.log(User.findById("6331c5937da8f864e55c5b71").next());
-  User.findById("6331c5937da8f864e55c5b71")
-    .next()
-    .then((user) => {
-      // console.log(user)
-      req.user = new User(user.name, user.email, user.cart, user._id);
+  User.findById('633477ac5cdf072716f26d9b')
+    .then(user => {
+      req.user = user;
       next();
     })
-    .catch((err) => console.log(err));
+    .catch(err => console.log(err));
 });
 
-// app.use("/admin", adminRoutes);
-// app.use(shopRoutes);
+app.use('/admin', adminRoutes);
+app.use(shopRoutes);
 
 app.use(errorController.get404);
 
 mongoose
   .connect(
-    "mongodb+srv://nguyenthienanz:umap12345@cluster0.13yr0iu.mongodb.net/?retryWrites=true&w=majority"
+    'mongodb+srv://nguyenthienanz:umap12345@cluster0.13yr0iu.mongodb.net/myshop?retryWrites=true&w=majority'
   )
-  .then((result) => {
+  .then(result => {
+    User.findOne().then(user => {
+      if (!user) {
+        const user = new User({
+          name: 'Nguyenthienanz',
+          email: 'nguyenthienanz@gmail.com',
+          cart: {
+            items: []
+          }
+        });
+        user.save();
+      }
+    });
     app.listen(3000);
   })
-  .catch((err) => {
+  .catch(err => {
     console.log(err);
   });
